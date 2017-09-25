@@ -1,1 +1,1 @@
-# tinyOpenCV
+# tinyCV
