@@ -1,4 +1,4 @@
-/*
+﻿/*
 * @file matrix.hpp
 * @brief tinycv::Matrix class implementation
 */
