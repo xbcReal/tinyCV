@@ -1,2 +1,6 @@
 vs2015/tinyCV/tinyCV.VC.VC.opendb
 vs2015/tinyCV/tinyCV.VC.db
+core/matrix_BACKUP_12760.hpp
+core/matrix_BASE_12760.hpp
+core/matrix_LOCAL_12760.hpp
+core/matrix_REMOTE_12760.hpp
