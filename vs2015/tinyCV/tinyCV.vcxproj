@@ -146,18 +146,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\core\image.hpp" />
     <ClInclude Include="..\..\core\matrix.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\..\list\feture_list.md" />
-    <Text Include="..\..\list\TODO.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\README.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\test\test.cpp" />
+    <ClCompile Include="..\..\test\test_matrix.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

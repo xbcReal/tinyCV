@@ -16,7 +16,6 @@
 #include <memory.h>
 
 typedef unsigned char uchar;
-typedef unsigned int uint;
 typedef float float32;
 typedef double float64;
 
@@ -24,7 +23,7 @@ namespace tinycv {
 
 	/*
 	 */
-	template<class DType>
+	template<class Dtype>
 	class Matrix
 	{
 	public:
@@ -35,47 +34,63 @@ namespace tinycv {
 			_counts = 0;
 			_refN = 1;
 			_data = nullptr;
-			_refptr = nullptr;
 		}
 		
 		Matrix(int rows, int cols)
 		{
-			default_init(rows, cols);
-			memset((void*)_data, 0, _counts * sizeof(DType));
+			_rows = rows;
+			_cols = cols;
+			_refN = 1;
+			_counts = rows*cols;
+			_data = new Dtype[_counts];
+			memset((void*)_data, 0, _counts * sizeof(Dtype));
 		}
 
-		Matrix(int rows, int cols, const DType* data)
+		Matrix(int rows, int cols, const Dtype* data)
 		{
-			default_init(rows, cols);
-			memcpy(_data, data, _counts * sizeof(DType));
+			_rows = rows;
+			_cols = cols;
+			_refN = 1;
+			_counts = rows*cols;
+			_data = new Dtype[_counts];
+			memcpy(_data, data, _counts * sizeof(Dtype));
+
 		}
 
 
-		Matrix(const std::vector<std::vector<DType> >  & dataVec)
+		Matrix(const std::vector<std::vector<Dtype> >  & dataVec)
 		{
 			assert(dataVec.size() > 0&& dataVec[0].size() > 0);
-			default_init(dataVec.size(), dataVec[0].size())
+			_rows = dataVec.size();
+			_cols = dataVec[0].size();
+			_refN = 1;
+			_counts = _rows*_cols;
+			_data = new Dtype[_counts];
 			for (int i = 0; i < _rows; i++)
 				for (int j = 0; j < _cols; j++)
 					_data[i*_cols + j] = dataVec[i][j];
 		}
 
-		Matrix(int rows, int cols, DType value)
+		Matrix(int rows, int cols, Dtype value)
 		{
-			default_init(rows, cols);
+			_rows = rows;
+			_cols = cols;
+			_refN = 1;
+			_counts = rows*cols;
+			_data = new Dtype[_counts];
 			for (int i = 0; i<_counts; i++)
 				_data[i] = value;
 		}
 
-		DType *row_ptr(int row) const
+		Dtype *row_ptr(int row) const
 		{
 			return &_data[row*_cols];
 		}
-		DType *col_ptr(int col) const
+		Dtype *col_ptr(int col) const
 		{
 			return &_data[col];
 		}
-		DType *get_ptr() const
+		Dtype *get_ptr() const
 		{
 			return _data;
 		}
@@ -84,11 +99,11 @@ namespace tinycv {
 			return *this;
 		}
 
-		DType data_at(int row, int col) const
+		Dtype data_at(int row, int col) const
 		{
 			return _data[row*_cols + col];
 		}
-		void set_data(DType v, int row, int col)
+		void set_data(Dtype v, int row, int col)
 		{
 			_data[row*cols() + col] = v;
 		}
@@ -100,10 +115,6 @@ namespace tinycv {
 			_counts = m.counts();
 			_data = m.get_ptr();
 			m._refN++;
-			_refptr = nullptr;
-			m._refptr = this;
-			_refN = m._refN;
-			
 		}
 
 		Matrix& operator = (const Matrix& m)
@@ -114,9 +125,6 @@ namespace tinycv {
 			_counts = m.counts();
 			_data = m.get_ptr();
 			m._refN++;
-			_refptr = nullptr;
-			m._refptr = this;
-			_refN = m._refN;
 			return *this;
 		}
 		
@@ -131,13 +139,6 @@ namespace tinycv {
 				delete[] _data;
 				_data = nullptr;
 			}
-			// unref
-			const Matrix *p = _refptr;
-			while (p != nullptr)
-			{
-				p->_refN--;
-				p = p->_refptr;
-			}
 		}
 
 		//some basic functions
@@ -145,7 +146,7 @@ namespace tinycv {
 		Matrix clone() const
 		{
 			Matrix m(_rows,_cols);
-			memcpy(m.get_ptr(), get_ptr(), counts() * sizeof(DType));
+			memcpy(m.get_ptr(), get_ptr(), counts() * sizeof(Dtype));
 			return m;
 		}
 
@@ -154,7 +155,7 @@ namespace tinycv {
 		{
 			if (cols() == m.cols() && rows() == m.rows() && typeid(_data) == typeid(m.get_ptr()))
 			{
-				memcpy(m.get_ptr(), get_ptr(),  counts() * sizeof(DType));
+				memcpy(m.get_ptr(), get_ptr(),  counts() * sizeof(Dtype));
 			}
 			else
 			{
@@ -162,8 +163,8 @@ namespace tinycv {
 				m._rows = _rows;
 				m._cols = _cols;
 				m._counts = _rows*_cols;
-				m._data = new DType[_counts];
-				memcpy(m.get_ptr(), get_ptr(), counts() * sizeof(DType));
+				m._data = new Dtype[_counts];
+				memcpy(m.get_ptr(), get_ptr(), counts() * sizeof(Dtype));
 			}
 			
 		}
@@ -185,7 +186,7 @@ namespace tinycv {
 			return _counts;
 		}
 
-		DType *  operator[](int k) const
+		Dtype *  operator[](int k) const
 		{
 			return &_data[k * _cols];
 		}
@@ -225,16 +226,7 @@ namespace tinycv {
 
 		}
 		
-		//Matrix operator -(int v)
-		//{
-		//	Matrix sub(rows(), cols());
-		//	for (int i = 0; i<sub.rows(); i++)
-		//		for (int j = 0; j<sub.cols(); j++)
-		//			sub[i][j] = this->data_at(i, j) - v;
-		//	return sub;
-		//}
-
-		Matrix operator -(const DType v)
+		Matrix operator -(int v)
 		{
 			Matrix sub(rows(), cols());
 			for (int i = 0; i<sub.rows(); i++)
@@ -243,16 +235,16 @@ namespace tinycv {
 			return sub;
 		}
 
-		//Matrix operator +(int v)
-		//{
-		//	Matrix sub(rows(), cols());
-		//	for (int i = 0; i<sub.rows(); i++)
-		//		for (int j = 0; j<sub.cols(); j++)
-		//			sub[i][j] = this->data_at(i, j) + v;
-		//	return sub;
-		//}
+		Matrix operator -(const Dtype v)
+		{
+			Matrix sub(rows(), cols());
+			for (int i = 0; i<sub.rows(); i++)
+				for (int j = 0; j<sub.cols(); j++)
+					sub[i][j] = this->data_at(i, j) - v;
+			return sub;
+		}
 
-		Matrix operator +(const DType v)
+		Matrix operator +(int v)
 		{
 			Matrix sub(rows(), cols());
 			for (int i = 0; i<sub.rows(); i++)
@@ -261,35 +253,28 @@ namespace tinycv {
 			return sub;
 		}
 
-		Matrix operator /(const DType v)
+		Matrix operator +(const Dtype v)
+		{
+			Matrix sub(rows(), cols());
+			for (int i = 0; i<sub.rows(); i++)
+				for (int j = 0; j<sub.cols(); j++)
+					sub[i][j] = this->data_at(i, j) + v;
+			return sub;
+		}
+
+		Matrix operator /(const Dtype v)
 		{
 			return 1.0 / v*(*this);
 		}
 
 
 	private:
-		void default_init(int rows,int cols)
-		{
-			_rows = rows;
-			_cols = cols;
-			_refN = 1;
-			_counts = rows*cols;
-			_refptr = nullptr;
-			try
-			{
-				_data = new DType[_counts];
-			}
-			catch (const std::bad_alloc &e)
-			{
-				std::cerr << e.what() << std::endl;
-			}
-		}
+		
 		int _cols;             
 		int _rows;             
 		int _counts;
-		DType* _data;
-		mutable int _refN;//  引用计数
-		mutable const Matrix *_refptr;// 记录谁引用了此对象
+		mutable int _refN;
+		Dtype* _data;
 	};
 
 
@@ -311,12 +296,15 @@ namespace tinycv {
 		return os;
 
 	}
+<<<<<<< HEAD
 	std::ostream &operator<<(std::ostream &os, uchar c)
 	{
 		os << (int)c;
 		return os;
 	}
 >>>>>>> lhw
+=======
+>>>>>>> parent of 2506632... 添加Image 类和简单测试， 下一步需要完善和建立测试框架（现在测试麻烦而且不正规）
 
 }//namespace tinycv
 

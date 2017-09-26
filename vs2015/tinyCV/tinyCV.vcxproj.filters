@@ -27,19 +27,9 @@
     <ClInclude Include="..\..\core\matrix.hpp">
       <Filter>头文件\core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\core\image.hpp">
-      <Filter>头文件\core</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\README.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\..\list\feture_list.md" />
-    <Text Include="..\..\list\TODO.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\test\test.cpp">
+    <ClCompile Include="..\..\test\test_matrix.cpp">
       <Filter>源文件\test</Filter>
     </ClCompile>
   </ItemGroup>

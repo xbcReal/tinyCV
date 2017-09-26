@@ -1,21 +1,22 @@
-#include "../core/image.hpp"
+#include "image.hpp"
 
 using namespace tinycv;
 
 int main()
 {
-	std::vector<Matrix<uchar> > _dvec;
-	for (int i = 0; i<255; i++)
-	{
-		Image src1(4000, 4000, 3, 0);
-		Image src2(4000, 4000, 3, 0);
-		Scalar  s(0, i, i);
+    Image<float> src(5,5,3); 
+   // std::cout<<src.at(0,0)<<std::endl;
 
-		src1.at(1, 0) = s;
-		src2.at(1, 1) = src1.at(1, 0);
+    std::vector<Matrix<float>> _dvec;
+    for(int i=0;i<3;i++)
+    {
+        _dvec.push_back(Matrix<float>(3,3,0.1f));
+    }
+    for(int i=0;i<3;i++)
+    {
+        std::cout<<_dvec[i]<<std::endl;
+    }
 
-		std::cout << src2.at(1, 1) << std::endl;
-		//_dvec.push_back(Matrix<uchar>(10000, 30000, (float)i));
-	}
+
     return 0;
 }
