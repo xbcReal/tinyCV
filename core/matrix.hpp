@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -50,8 +51,8 @@ namespace tinycv {
 			_cols = cols;
 			_refN = 1;
 			_counts = rows*cols;
-			_data = new Dtype[counts_];
-			memcpy(data_, data, counts_ * sizeof(Dtype));
+			_data = new Dtype[_counts];
+			memcpy(_data, data, _counts * sizeof(Dtype));
 
 		}
 		Matrix(const std::vector<std::vector<Dtype> >  & dataVec)
