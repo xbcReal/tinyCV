@@ -9,4 +9,4 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY build)
 
 set(CMAKE_CXX_FLAGS -std=c++11)
 
-ADD_EXECUTABLE(test_matrix test/test_matrix.cpp)
+ADD_EXECUTABLE(test test/test.cpp)

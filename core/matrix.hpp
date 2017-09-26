@@ -22,7 +22,7 @@ namespace tinycv {
 
 	/*
 	 */
-	template<class Dtype=uchar>
+	template<class Dtype>
 	class Matrix
 	{
 	public:
@@ -55,6 +55,8 @@ namespace tinycv {
 			memcpy(_data, data, _counts * sizeof(Dtype));
 
 		}
+
+
 		Matrix(const std::vector<std::vector<Dtype> >  & dataVec)
 		{
 			assert(dataVec.size() > 0&& dataVec[0].size() > 0);
@@ -266,7 +268,7 @@ namespace tinycv {
 
 
 	private:
-		friend class Matrix;
+		
 		int _cols;             
 		int _rows;             
 		int _counts;
