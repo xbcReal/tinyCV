@@ -325,7 +325,6 @@ namespace tinycv {
 		os << (int)c;
 		return os;
 	}
->>>>>>> lhw
 
 }//namespace tinycv
 
