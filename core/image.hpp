@@ -146,7 +146,8 @@ namespace tinycv{
 		int  rows() const  { return _rows; };
 		int  cols() const  { return _rows; };
 		int  channels() const  { return _channels; };
-    private:
+	private:
+		friend int imsave(const Image_<uchar> &image,const char *filename);
         std::vector<Matrix<DType>> _dvec;
         int _rows;
         int _cols;
