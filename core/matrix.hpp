@@ -55,9 +55,9 @@ public:
     Matrix(const std::vector<std::vector<DType> >  & dataVec)
     {
         assert(dataVec.size() > 0&& dataVec[0].size() > 0);
-        default_init(dataVec.size(), dataVec[0].size())
-                for (int i = 0; i < _rows; i++)
-                for (int j = 0; j < _cols; j++)
+        default_init(dataVec.size(), dataVec[0].size());
+        for (int i = 0; i < _rows; i++)
+            for (int j = 0; j < _cols; j++)
                 _data[i*_cols + j] = dataVec[i][j];
     }
 
@@ -284,8 +284,8 @@ public:
         for(int i = 0;i < sub._rows;i++){
             for(int j = 0;j < sub._cols;j++){
                 sub[i][j] = 0.0;
-                std::vector<Dtype> rowData = this->get_row(i);
-                std::vector<Dtype> colData = mat.get_col(j);
+                std::vector<DType> rowData = this->get_row(i);
+                std::vector<DType> colData = mat.get_col(j);
                 assert(rowData.size() == colData.size());
                 for(int k = 0;k < rowData.size();k++){
                     sub[i][j] += rowData[k] * colData[k];

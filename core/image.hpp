@@ -63,7 +63,7 @@ namespace tinycv{
 			}
 			Scalar_ & operator = (const Scalar_ &s)
 			{
-				assert(_dim == s.dim(),"Scalar dims should be same");
+				assert(_dim == s.dim());
 				for (int i = 0; i < _dim; i++)
 				{
 					_d[i] = s[i];
@@ -96,7 +96,7 @@ namespace tinycv{
 			//}
 			template <class T> friend class Image_;
             int _dim;
-            DType* _p[TINY_IMG_MAX_DIM]; // ��¼ֵ�ĵ�ַ
+            DType* _p[TINY_IMG_MAX_DIM]; // ��¼ֵ�ĵ�ַ
 			DType _d[TINY_IMG_MAX_DIM]; // 
 
     };
