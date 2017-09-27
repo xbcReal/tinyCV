@@ -264,6 +264,61 @@ namespace tinycv {
 		{
 			return 1.0 / v*(*this);
 		}
+		 //matrix *
+    Matrix operator *(const Matrix& mat){
+        //std::cout << "_cols is:" << _cols << std::endl;
+        //std::cout << "mat.rows() is:" << mat.rows() << std::endl;
+        assert(_cols == mat.rows());
+        Matrix sub(_rows,mat.cols());
+        for(int i = 0;i < sub._rows;i++){
+            for(int j = 0;j < sub._cols;j++){
+                sub[i][j] = 0.0;
+                std::vector<Dtype> rowData = this->get_row(i);
+                std::vector<Dtype> colData = mat.get_col(j);
+                assert(rowData.size() == colData.size());
+                for(int k = 0;k < rowData.size();k++){
+                    sub[i][j] += rowData[k] * colData[k];
+                }
+            }
+        }
+        return sub;
+
+    }
+
+    //matrix .*(replace it with mul)
+    Matrix mul(const Matrix& mat){
+        assert(_cols == mat.cols() && _rows == mat.rows());
+        Matrix sub(_rows,_cols);
+        for(int i = 0;i < sub._rows;i++){
+            for(int j = 0;j < sub._cols;j++){
+                sub[i][j] = data_at(i,j) * mat.data_at(i,j);
+            }
+        }
+        return sub;
+    }
+
+    //matrix ./(replace it with div)
+    Matrix div(const Matrix& mat){
+        assert(_cols == mat.cols() && _rows == mat.rows());
+        Matrix sub(_rows,_cols);
+        for(int i = 0;i < sub._rows;i++){
+            for(int j = 0;j < sub._cols;j++){
+                sub[i][j] = data_at(i,j) / (double)mat.data_at(i,j);
+            }
+        }
+        return sub;
+    }
+
+    //matrix transponse
+    Matrix trans(){
+        Matrix sub(_cols,_rows);
+        for(int i = 0;i < sub._rows;i++){
+            for(int j = 0;j < sub._cols;j++){
+                sub[i][j] = this->data_at(j,i);
+            }
+        }
+        return sub;
+    }
 
 		//matrix inv,until now,we only support square matrix to get its inv matrix and if the dimension is a little bigger ,the program would be pretty slow
     //because until now we use adjoint matrix to get its inv matrix.And we will try to use other methods to get the inv matrix to support the none square
