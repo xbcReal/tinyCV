@@ -1,4 +1,4 @@
-/*
+ /*
 * @file Image_.hpp
 * @brief tinycv::Image_ and Scalar_ class implementation
 */
@@ -113,14 +113,13 @@ std::ostream &operator<<(std::ostream &os, const Scalar_<T> &s)
     return os;
 }
 
-//class Point_,we only support 2d point(_x,_y)because we may not use the depth
-//infomation _z
+//class Point_,we only support 2d point(_x,_y) because we may not use the depth infomation _z
 class Point_{
 public:
     //constructor
-    Point_(int x = 0,int y = 0){_x = x;_y = y;}
+    Point_(int x = 0,int y = 0):_x(x),_y(y){}
     //copy constructor
-    Point_(const Point_& pt){_x = pt.x();_y = pt.y();}
+    Point_(const Point_& pt):_x(pt.x()),_y(pt.y()){}
     //copy assign operator
     Point_ operator =(Point_ pt){_x = pt.x();_y = pt.y();}
     int operator [](int i){
@@ -132,6 +131,7 @@ public:
     //get the y coordinate
     int y()const{return _y;}
 private:
+    template <class T> friend class Image_;
     int _x;
     int _y;
 };
@@ -147,6 +147,7 @@ public:
     Image_(int rows,int cols,int channels, DType value=0, const DType*from=nullptr)
     {
         assert(channels<=TINY_IMG_MAX_DIM );
+        assert(rows > 0 && cols > 0);
         _rows=rows;
         _cols=cols;
         _channels=channels;
@@ -160,13 +161,34 @@ public:
     }
     Scalar_<DType> at(int row,int col)
     {
+        assert(row >= 0 && row < _rows);
+        assert(col >= 0 && col < _cols);        
         Scalar_<DType> s;
         s._dim = _channels;
         for(int i=0;i<_channels;i++)
             s.set_data(i, &_dvec[i][row][col]);
         return s;
     }
-
+    Image_ roi(Point_ tl,Point_ br){
+        assert(br._x > tl._x && br._y > tl._y);
+        assert(tl._x >= 0 && br._x < _cols);
+        assert(tl._y >= 0 && br._y < _rows);
+        Image_<DType> roiImage(br._y - tl._y + 1,br._x - tl._x + 1,_channels);
+        //for(int i = 0;i < _channels;i++){
+            for(int j = 0;j < roiImage._rows;j++){
+                for(int k = 0;k < roiImage._cols;k++){
+                    roiImage.at(j,k) = this->at(j + tl._y,k + tl._x);
+                }
+            }
+        //}
+        return roiImage;
+    }
+    Image_ roi(int x,int y,int width,int height){
+        Point_ tl = Point_(x,y);
+        Point_ br = Point_(x + width - 1,y + height - 1);
+        Image_ roiImage = roi(tl,br);
+        return roiImage;
+    }
     bool has_data()const {return _dvec.size() > 0;}
     int  rows() const  { return _rows; }
     int  cols() const  { return _rows; }
