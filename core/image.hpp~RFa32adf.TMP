@@ -160,7 +160,7 @@ public:
 			for (int i = 0; i < rows; i++)
 				for (int j = 0; j < cols; j++)
 					for (int c = 0; c < channels; c++)
-						_dvec[c][i][j] = from[i*cols*channels + j*channels + c];
+						_dvec[c][i][j] = raw_data[i*cols*channels + j*channels + c];
 		}
     }
     Scalar_<DType> at(int row,int col)
@@ -195,7 +195,7 @@ public:
     }
     bool has_data()const {return _dvec.size() > 0;}
     int  rows() const  { return _rows; }
-    int  cols() const  { return _cols; }
+    int  cols() const  { return _rows; }
     int  channels() const  { return _channels; }
 private:
     friend int imsave(const Image_<uchar> &image, const char *filename);

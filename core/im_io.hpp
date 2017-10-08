@@ -14,7 +14,25 @@ namespace tinycv
 {
     void write_raw_data_to_jpeg_file(const char* jpegFileName, unsigned char* inputData,
         int nWidth, int nHeight, int nChannel, int nQuality=100);
-    
+	int read_raw_data_from_jpeg_file(const char *filename,
+		unsigned char** outputData,
+		int& nWidth, int& nHeight, int &nChannel);
+
+	Image_<uchar> imread(const char *filename)
+	{
+		unsigned char* data;
+		int nWidth, nHeight, nChannel;
+		if (0!=read_raw_data_from_jpeg_file(filename, &data, nWidth, nHeight, nChannel))
+		{
+			std::cout << "read error" << std::endl;
+			return Image_<uchar>();
+		}
+		
+		Image_<uchar>  dst(nHeight, nWidth, nChannel, 0, data);
+		delete[]data;
+		return dst;
+	}
+
     int imsave(const Image_<uchar> &image,const char *filename)
     {
         long count =  image.rows()*image.cols()*image.channels(); 
@@ -31,6 +49,7 @@ namespace tinycv
 
             }
         }
+		
         write_raw_data_to_jpeg_file(filename, raw_data,
             image.cols(), image.rows(),image.channels());
 
@@ -151,5 +170,62 @@ namespace tinycv
         /* After finish_compress, we can close the output file. */
         fclose(outfile);
     }
+
+	int read_raw_data_from_jpeg_file(const char *filename,
+		unsigned char** outputData,
+		int& nWidth, int& nHeight, int &nChannel)
+	{
+		struct jpeg_decompress_struct cinfo;
+		struct jpeg_error_mgr jerr;
+		FILE *input_file;
+		FILE *output_file;
+		JSAMPARRAY buffer;
+		int row_width;
+
+		unsigned char *output_buffer;
+		unsigned char *tmp = NULL;
+
+		cinfo.err = jpeg_std_error(&jerr);
+
+		if ((input_file = fopen(filename, "rb")) == NULL) 
+		{
+			fprintf(stderr, "can't open %s\n", filename);
+			return -1;
+		}
+
+		// Initialization of JPEG compression objects  
+		jpeg_create_decompress(&cinfo);
+
+		/* Specify data source for decompression */
+		jpeg_stdio_src(&cinfo, input_file);
+		(void)jpeg_read_header(&cinfo, TRUE);
+		(void)jpeg_start_decompress(&cinfo);
+
+		nWidth = cinfo.output_width;
+		nChannel = cinfo.output_components;
+		nHeight = cinfo.output_height;
+
+		
+		buffer = (*cinfo.mem->alloc_sarray)
+			((j_common_ptr)&cinfo, JPOOL_IMAGE, nWidth*nChannel, 1);
+
+		
+
+		*outputData = (unsigned char *)malloc(nWidth*nChannel * nHeight);
+		memset(*outputData, 0, nWidth*nChannel * nHeight);
+		tmp = *outputData;
+
+		while (cinfo.output_scanline < cinfo.output_height)
+		{
+			(void)jpeg_read_scanlines(&cinfo, buffer, 1);
+
+			memcpy(tmp, *buffer, nWidth*nChannel);
+			tmp += nWidth*nChannel;
+		}
+		(void)jpeg_finish_decompress(&cinfo);
+		jpeg_destroy_decompress(&cinfo);
+		fclose(input_file);
+		return 0;
+	}
 
 }//namespace tinycv

@@ -1,13 +1,19 @@
 #include "../core/image.hpp"
 #include "../core/im_io.hpp"
+
 using namespace tinycv;
 
 int main()
 {
 
-//Image src(200,200,3,128);
-//imsave(src,"out.jpg");
-
+    
+	for (int i = 0; i < 100; i++)
+	{
+		Image dst = imread("../../img/test.jpg");
+		imsave(dst, "out2.jpg");
+	}
+	
+	return 0;
     std::vector<Matrix<uchar> > _dvec;
     
     Image src1(3, 3, 3, 22);
