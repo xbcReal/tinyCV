@@ -24,7 +24,11 @@ namespace tinycv {
 
 
 /*
-         */
+ DType has 3 types:
+ uchar for integral image,its range is [0,255]
+ float for decimal image,its range is [0,255]
+ double for cnn feature maps or other math matrix,it's range is double's range
+*/
 template<class DType>
 class Matrix
 {
@@ -34,9 +38,7 @@ public:
         _cols=0;
         _rows=0;
         _counts = 0;
-        _refN = 1;
         _data = nullptr;
-        _refptr = nullptr;
     }
 
     Matrix(int rows, int cols)
@@ -54,7 +56,7 @@ public:
 
     Matrix(const std::vector<std::vector<DType> >  & dataVec)
     {
-        assert(dataVec.size() > 0&& dataVec[0].size() > 0);
+        assert(dataVec.size() > 0 && dataVec[0].size() > 0);
         default_init(dataVec.size(), dataVec[0].size());
         for (int i = 0; i < _rows; i++)
             for (int j = 0; j < _cols; j++)
@@ -82,43 +84,40 @@ public:
     }
     Matrix operator &(const Matrix &mat)
     {
+        std::cout << "in & " << std::endl;
+        //???what to do
         return *this;
     }
 
     DType data_at(int row, int col) const
     {
+        assert(row >= 0 && row < _rows && col >= 0 && col < _cols);
         return _data[row*_cols + col];
     }
     void set_data(DType v, int row, int col)
     {
-        _data[row*cols() + col] = v;
+        _data[row*_cols + col] = v;
     }
 
     Matrix (const Matrix& m)
     {
-        _cols = m.cols();
-        _rows = m.rows();
-        _counts = m.counts();
-        _data = m.get_ptr();
-        m._refN++;
-        _refptr = nullptr;
-        m._refptr = this;
-        _refN = m._refN;
+        default_init(m.rows(), m.cols());
+        memcpy(_data,m.get_ptr(),_counts  * sizeof(DType));
+        std::cout << "in Matrix (const Matrix& m)" << std::endl;
 
     }
 
     Matrix& operator = (const Matrix& m)
     {
-        this->~Matrix();
-        _cols = m.cols();
-        _rows = m.rows();
-        _counts = m.counts();
-        _data = m.get_ptr();
-        m._refN++;
-        _refptr = nullptr;
-        m._refptr = this;
-        _refN = m._refN;
-        return *this;
+        if(this != &m){
+            this->~Matrix();
+            default_init(m.rows(), m.cols());
+            memcpy(_data,m.get_ptr(),_counts  * sizeof(DType));
+            return *this;
+        }
+        else{
+            return *this;
+        }
     }
 
 
@@ -127,21 +126,15 @@ public:
         _rows = 0;
         _cols = 0;
         _counts = 0;
-        if (_data != nullptr && (--_refN)==0)
+        if (_data != nullptr)
         {
             delete[] _data;
             _data = nullptr;
         }
         // unref
-        const Matrix *p = _refptr;
-        while (p != nullptr)
-        {
-            p->_refN--;
-            p = p->_refptr;
-        }
     }
 
-    //some basic functions
+    //some basic functionsfunctions
     //clone a Matrix and return a Matrix
     Matrix clone() const
     {
@@ -153,7 +146,8 @@ public:
     //copy the matrix to another matrix
     void copyTo(Matrix& m) const
     {
-        if (cols() == m.cols() && rows() == m.rows() && typeid(_data) == typeid(m.get_ptr()))
+        assert(this != &m);
+        if (_cols == m.cols() && _rows == m.rows() && typeid(_data) == typeid(m.get_ptr()))
         {
             memcpy(m.get_ptr(), get_ptr(),  counts() * sizeof(DType));
         }
@@ -202,45 +196,87 @@ public:
     {
         assert(cols() == mat.cols() && rows() == mat.rows());
         Matrix sub(mat.rows(), mat.cols());
-        for (int i = 0; i<sub.rows(); i++)
-            for (int j = 0; j<sub.cols(); j++)
-                sub[i][j] = this->data_at(i, j) - mat[i][j];
+        if(!strcmp(typeid(DType).name(),"h")){
+            for (int i = 0; i<sub.rows(); i++)
+                for (int j = 0; j<sub.cols(); j++)
+                    sub[i][j] = std::min(std::max(DType(this->data_at(i, j) - mat[i][j]),DType(0)),DType(255));
+        }
+        else if(!strcmp(typeid(DType).name(),"f")){
+            for (int i = 0; i<sub.rows(); i++)
+                for (int j = 0; j<sub.cols(); j++)
+                    sub[i][j] = std::min(std::max(DType(this->data_at(i, j) - mat[i][j]),DType(0)),DType(1));
+        }
+        else if(!strcmp(typeid(DType).name(),"d")){
+            //just sub without other limits
+            for (int i = 0; i<sub.rows(); i++)
+                for (int j = 0; j<sub.cols(); j++)
+                    sub[i][j] = this->data_at(i, j) - mat[i][j];
+        }
+        else{
+            abort();
+        }
         return sub;
     }
     Matrix operator +(const Matrix& mat)
     {
         assert(cols() == mat.cols() && rows() == mat.rows());
+        //assert(typeid(DType))
         Matrix add(mat.rows(), mat.cols());
-        for (int i = 0; i<add.rows(); i++)
-            for (int j = 0; j<add.cols(); j++)
-                add[i][j] = this->data_at(i, j) + mat[i][j];
+        if(!strcmp(typeid(DType).name(),"h")){
+            std::cout << "uchar" <<std::endl;
+            for (int i = 0; i<add.rows(); i++)
+                for (int j = 0; j<add.cols(); j++)
+                    add[i][j] = std::min(std::max(DType(this->data_at(i, j) + mat[i][j]),DType(0)),DType(255));
+        }
+        else if(!strcmp(typeid(DType).name(),"f")){
+            for (int i = 0; i<add.rows(); i++)
+                for (int j = 0; j<add.cols(); j++)
+                    add[i][j] = std::min(std::max(DType(this->data_at(i, j) + mat[i][j]),DType(0)),DType(1));
+        }
+        else if(!strcmp(typeid(DType).name(),"d")){
+            //just add without other limits
+            for (int i = 0; i<add.rows(); i++)
+                for (int j = 0; j<add.cols(); j++)
+                    add[i][j] = std::min(std::max(DType(this->data_at(i, j) + mat[i][j]),DType(0)),DType(1));
+        }
+        else{
+            std::cout << typeid(DType).name() << std::endl;
+            abort();
+        }
         return add;
     }
 
     Matrix operator -(void)
     {
+        assert(!strcmp(typeid(DType).name(),"d"));
         Matrix ret(rows(), cols());
-        for (int i = 0; i<counts(); i++)
+        for (int i = 0; i< _counts; i++)
             ret.get_ptr()[i] = -(this->get_ptr()[i]);
         return ret;
-
     }
-
-    //Matrix operator -(int v)
-    //{
-    //	Matrix sub(rows(), cols());
-    //	for (int i = 0; i<sub.rows(); i++)
-    //		for (int j = 0; j<sub.cols(); j++)
-    //			sub[i][j] = this->data_at(i, j) - v;
-    //	return sub;
-    //}
 
     Matrix operator -(const DType v)
     {
         Matrix sub(rows(), cols());
-        for (int i = 0; i<sub.rows(); i++)
-            for (int j = 0; j<sub.cols(); j++)
-                sub[i][j] = this->data_at(i, j) - v;
+        if(strcmp(typeid(DType).name() ,"h")){
+            for (int i = 0; i<sub.rows(); i++)
+                for (int j = 0; j<sub.cols(); j++)
+                    sub[i][j] = std::min(std::max(DType(this->data_at(i, j) - v),DType(0)),DType(255));
+        }
+        else if(!strcmp(typeid(DType).name(),"f")){
+            for (int i = 0; i<sub.rows(); i++)
+                for (int j = 0; j<sub.cols(); j++)
+                    sub[i][j] = std::min(std::max(DType(this->data_at(i, j) - v),DType(0)),DType(1));
+        }
+        else if(!strcmp(typeid(DType).name(),"d")){
+            //just minus without other limits
+            for (int i = 0; i<sub.rows(); i++)
+                for (int j = 0; j<sub.cols(); j++)
+                    sub[i][j] = this->data_at(i, j) - v;
+        }
+        else{
+             abort();
+        }
         return sub;
     }
 
@@ -256,30 +292,63 @@ public:
     Matrix operator +(const DType v)
     {
         Matrix sub(rows(), cols());
-        for (int i = 0; i<sub.rows(); i++)
-            for (int j = 0; j<sub.cols(); j++)
-                sub[i][j] = this->data_at(i, j) + v;
+        if(!strcmp(typeid(DType).name() ,"h")){
+            for (int i = 0; i<sub.rows(); i++)
+                for (int j = 0; j<sub.cols(); j++)
+                    sub[i][j] = std::min(std::max(DType(this->data_at(i, j) + v),DType(0)),DType(255));
+        }
+        else if(!strcmp(typeid(DType).name(),"f")){
+            for (int i = 0; i<sub.rows(); i++)
+                for (int j = 0; j<sub.cols(); j++)
+                    sub[i][j] = std::min(std::max(DType(this->data_at(i, j) + v),DType(0)),DType(1));
+        }
+        else if(!strcmp(typeid(DType).name(),"d")){
+            for (int i = 0; i<sub.rows(); i++)
+                for (int j = 0; j<sub.cols(); j++)
+                    sub[i][j] = this->data_at(i, j) + v;
+        }
+        else{
+            std::cout << "typeid:" << typeid(DType).name() << std::endl;
+             abort();
+        }
         return sub;
     }
     Matrix operator *(const DType v) {
         Matrix sub(rows(), cols());
-        for (int i = 0; i < sub.rows(); i++) {
-            for (int j = 0; j < sub.cols(); j++) {
-                sub[i][j] = this->data_at(i, j) * v;
+        if(!strcmp(typeid(DType).name(),"h")){
+            for (int i = 0; i < sub.rows(); i++) {
+                for (int j = 0; j < sub.cols(); j++) {
+                    sub[i][j] = std::min(std::max(DType(this->data_at(i, j) * v),DType(0)),DType(255));
+                }
             }
         }
+        if(strcmp(typeid(DType).name(),"f")){
+            for (int i = 0; i < sub.rows(); i++) {
+                for (int j = 0; j < sub.cols(); j++) {
+                    sub[i][j] = std::min(std::max(DType(this->data_at(i, j) * v),DType(0)),DType(1));
+                }
+            }
+        }
+        if(!strcmp(typeid(DType).name(),"d")){
+            for (int i = 0; i < sub.rows(); i++) {
+                for (int j = 0; j < sub.cols(); j++) {
+                    sub[i][j] = this->data_at(i, j) * v;
+                }
+            }
+        }
+
         return sub;
     }
     Matrix operator /(const DType v)
     {
-        return 1.0 / v*(*this);
+        return (*this) *  DType(1.0 / v);
     }
 
     //matrix *
     Matrix operator *(const Matrix& mat){
         //std::cout << "_cols is:" << _cols << std::endl;
         //std::cout << "mat.rows() is:" << mat.rows() << std::endl;
-        assert(_cols == mat.rows());
+        assert(_cols == mat.rows() && !strcmp(typeid(DType).name(),"d"));
         Matrix sub(_rows,mat.cols());
         for(int i = 0;i < sub._rows;i++){
             for(int j = 0;j < sub._cols;j++){
@@ -298,7 +367,7 @@ public:
 
     //matrix .*(replace it with mul)
     Matrix mul(const Matrix& mat){
-        assert(_cols == mat.cols() && _rows == mat.rows());
+        assert(_cols == mat.cols() && _rows == mat.rows() && !strcmp(typeid(DType).name(),"d"));
         Matrix sub(_rows,_cols);
         for(int i = 0;i < sub._rows;i++){
             for(int j = 0;j < sub._cols;j++){
@@ -310,7 +379,7 @@ public:
 
     //matrix ./(replace it with div)
     Matrix div(const Matrix& mat){
-        assert(_cols == mat.cols() && _rows == mat.rows());
+        assert(_cols == mat.cols() && _rows == mat.rows() && !strcmp(typeid(DType).name(),"d"));
         Matrix sub(_rows,_cols);
         for(int i = 0;i < sub._rows;i++){
             for(int j = 0;j < sub._cols;j++){
@@ -334,7 +403,7 @@ public:
     //because until now we use adjoint matrix to get its inv matrix.And we will try to use other methods to get the inv matrix to support the none square
     //and biiger matrix to get its inv matrix
     Matrix inv(){
-        assert(_cols == _rows);
+        assert(_cols == _rows && !strcmp(typeid(DType).name(),"d"));
         int n = _cols;
         int i,j,k,m=2*n;
         Matrix a(_cols,2 * _cols);
@@ -414,9 +483,7 @@ private:
     {
         _rows = rows;
         _cols = cols;
-        _refN = 1;
         _counts = rows*cols;
-        _refptr = nullptr;
         try
         {
             _data = new DType[_counts];
@@ -430,12 +497,10 @@ private:
     int _rows;
     int _counts;
     DType* _data;
-    mutable int _refN;//  引用计数
-    mutable const Matrix *_refptr;// 记录谁引用了此对象
 };
 
 
-template<typename  T>
+template<typename T>
 std::ostream &operator<<(std::ostream &os, const Matrix<T> &mat)
 {
     os << "[ " << std::endl;
