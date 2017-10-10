@@ -19,14 +19,13 @@ typedef unsigned char uchar;
 typedef unsigned int uint;
 typedef float float32;
 typedef double float64;
-
 namespace tinycv {
 
 
 /*
  DType has 3 types:
  uchar for integral image,its range is [0,255]
- float for decimal image,its range is [0,255]
+ float for decimal image,its range is [0,1]
  double for cnn feature maps or other math matrix,it's range is double's range
 */
 template<class DType>
@@ -213,6 +212,7 @@ public:
                     sub[i][j] = this->data_at(i, j) - mat[i][j];
         }
         else{
+            std::cout << "typeid:" << typeid(DType).name() << std::endl;
             abort();
         }
         return sub;
@@ -237,7 +237,7 @@ public:
             //just add without other limits
             for (int i = 0; i<add.rows(); i++)
                 for (int j = 0; j<add.cols(); j++)
-                    add[i][j] = std::min(std::max(DType(this->data_at(i, j) + mat[i][j]),DType(0)),DType(1));
+                    add[i][j] = DType(this->data_at(i, j) + mat[i][j]);
         }
         else{
             std::cout << typeid(DType).name() << std::endl;
@@ -258,7 +258,7 @@ public:
     Matrix operator -(const DType v)
     {
         Matrix sub(rows(), cols());
-        if(strcmp(typeid(DType).name() ,"h")){
+        if(!strcmp(typeid(DType).name() ,"h")){
             for (int i = 0; i<sub.rows(); i++)
                 for (int j = 0; j<sub.cols(); j++)
                     sub[i][j] = std::min(std::max(DType(this->data_at(i, j) - v),DType(0)),DType(255));
@@ -275,6 +275,7 @@ public:
                     sub[i][j] = this->data_at(i, j) - v;
         }
         else{
+             std::cout << "typeid:" << typeid(DType).name() << std::endl;
              abort();
         }
         return sub;
@@ -309,7 +310,7 @@ public:
         }
         else{
             std::cout << "typeid:" << typeid(DType).name() << std::endl;
-             abort();
+            abort();
         }
         return sub;
     }
@@ -322,19 +323,23 @@ public:
                 }
             }
         }
-        if(strcmp(typeid(DType).name(),"f")){
+        else if(!strcmp(typeid(DType).name(),"f")){
             for (int i = 0; i < sub.rows(); i++) {
                 for (int j = 0; j < sub.cols(); j++) {
                     sub[i][j] = std::min(std::max(DType(this->data_at(i, j) * v),DType(0)),DType(1));
                 }
             }
         }
-        if(!strcmp(typeid(DType).name(),"d")){
+        else if(!strcmp(typeid(DType).name(),"d")){
             for (int i = 0; i < sub.rows(); i++) {
                 for (int j = 0; j < sub.cols(); j++) {
                     sub[i][j] = this->data_at(i, j) * v;
                 }
             }
+        }
+        else{
+            std::cout << "typeid:" << typeid(DType).name() << std::endl;
+            abort();
         }
 
         return sub;
@@ -401,8 +406,9 @@ public:
     }
     //matrix inv,until now,we only support square matrix to get its inv matrix and if the dimension is a little bigger ,the program would be pretty slow
     //because until now we use adjoint matrix to get its inv matrix.And we will try to use other methods to get the inv matrix to support the none square
-    //and biiger matrix to get its inv matrix
-    Matrix inv(){
+    //and biiger matrix to get its inv matrixt
+    //program cant get the right inverse matrix,need to be fixed...
+    /*Matrix inv(){
         assert(_cols == _rows && !strcmp(typeid(DType).name(),"d"));
         int n = _cols;
         int i,j,k,m=2*n;
@@ -467,7 +473,7 @@ public:
 
         for(i=0;i<n;i++){
             for(j=0;j<n;j++){
-                if(fabs(a[i][j+n]) < 0.0001){
+                if(abs(a[i][j+n]) < 0.0001){
                     B[i][j]=0.0;
                 }
                 else{
@@ -476,7 +482,7 @@ public:
             }
         }
         return B;
-    }
+    }*/
 
 private:
     void default_init(int rows,int cols)
@@ -493,6 +499,24 @@ private:
             std::cerr << e.what() << std::endl;
         }
     }
+    //index from 0 to _rows-1
+    std::vector<DType> get_row(const int row) const{
+        std::vector<DType> rowData;
+        int base = row * _cols;
+        for(int i = 0;i < _cols;i++){
+            rowData.push_back(_data[base+i]);
+        }
+        return rowData;
+    }
+    //index from 0 to _cols-1    
+    std::vector<DType> get_col(const int col) const{
+        std::vector<DType> colData;   
+        for(int i = col;i < _counts;i+=_cols){
+            colData.push_back(_data[i]);
+        }     
+        return colData;
+    }
+private:
     int _cols;
     int _rows;
     int _counts;
@@ -513,17 +537,12 @@ std::ostream &operator<<(std::ostream &os, const Matrix<T> &mat)
                 os << " ,";
         }
         os << ";" << std::endl;
-    };
+    }
     os << "]" << std::endl;
     return os;
-
 }
-std::ostream &operator<<(std::ostream &os, uchar c)
-{
-    os << (int)c;
-    return os;
-}
-
 }//namespace tinycv
-
+typedef tinycv::Matrix<double> Matrixd;
+typedef tinycv::Matrix<uchar> Matu;
+typedef tinycv::Matrix<float> Matf;
 #endif // TINYCV_CORE_MATRIX_HPP
