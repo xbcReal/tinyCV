@@ -20,3 +20,4 @@ SET(CMAKE_CXX_FLAGS -std=c++11)
 
 ADD_EXECUTABLE(test test/test.cpp)
 TARGET_LINK_LIBRARIES(test -ljpeg)
+ADD_EXECUTABLE(testMatrix test/testMatrix.cpp)
