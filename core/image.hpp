@@ -114,10 +114,11 @@ std::ostream &operator<<(std::ostream &os, const Scalar_<T> &s)
 }
 
 //class Point_,we only support 2d point(_x,_y) because we may not use the depth infomation _z
+template <class DType>
 class Point_{
 public:
-    //constructor
-    Point_(int x = 0,int y = 0):_x(x),_y(y){}
+    //default constructor
+    Point_(DType x = 0,DType y = 0):_x(x),_y(y){}
     //copy constructor
     Point_(const Point_& pt):_x(pt.x()),_y(pt.y()){}
     //copy assign operator
@@ -127,14 +128,17 @@ public:
         return i?_y:_x;
     }
     //get the x coordinate
-    int x()const{return _x;}
+    DType x()const{return _x;}
     //get the y coordinate
-    int y()const{return _y;}
+    DType y()const{return _y;}
 private:
     template <class T> friend class Image_;
-    int _x;
-    int _y;
+    DType _x;
+    DType _y;
 };
+typedef Point_<int> Point;
+typedef Point_<float> Pointf;
+typedef Point_<double> Pointd;
 
 /*
      * support up to 4 channels Image_
@@ -173,7 +177,8 @@ public:
             s.set_data(i, &_dvec[i][row][col]);
         return s;
     }
-    Image_ roi(Point_ tl,Point_ br){
+    template <class T>    
+    Image_ roi(Point_<T> tl,Point_<T> br){
         assert(br._x > tl._x && br._y > tl._y);
         assert(tl._x >= 0 && br._x < _cols);
         assert(tl._y >= 0 && br._y < _rows);
@@ -187,9 +192,10 @@ public:
         //}
         return roiImage;
     }
-    Image_ roi(int x,int y,int width,int height){
-        Point_ tl = Point_(x,y);
-        Point_ br = Point_(x + width - 1,y + height - 1);
+    template <class T>        
+    Image_ roi(T x,T y,T width,T height){
+        Point_<T> tl = Point_<T>(x,y);
+        Point_<T> br = Point_<T>(x + width - 1,y + height - 1);
         Image_ roiImage = roi(tl,br);
         return roiImage;
     }
