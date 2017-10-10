@@ -9,7 +9,7 @@ int main()
     
 	for (int i = 0; i < 100; i++)
 	{
-		Image dst = imread("../../img/test.jpg");
+		Image dst = imread("./img/test.jpg");
 		imsave(dst, "out2.jpg");
 	}
 	
@@ -41,9 +41,9 @@ int main()
     //src1.at(1, 0) = ss;
     //std::cout << s[3] <<std::endl;
     //src2.at(1, 1) = src1.at(1, 0);
-    Point_ pt(10,5);
-    Point_ pt1(pt);
-    Point_ pt2;
+    Point pt(10,5);
+    Point pt1(pt);
+    Point pt2;
     pt2 = pt;
 
     //std::cout << pt.x() << std::ends << pt.y() << std::endl;
